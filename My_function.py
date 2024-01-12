@@ -29,9 +29,20 @@ def sparse_input_channel(GT_image, msfa_size,channel):
     return input_image[:,:,channel]
 
 def reorder_imec(old):
+    """
+    重新排列多频带立体影像数据，使中心波长从小到大排列。
+
+    参数:
+    old (numpy.ndarray): 输入的多频带立体影像数据，具有形状 (_, _, C)，其中 C 是通道数。
+
+    返回:
+    numpy.ndarray: 重新排列后的多频带立体影像数据，具有相同的形状 (_, _, C)。
+    """
     ### reorder the multiband cube, making the center wavelength from small to large
-    _,_,C = old.shape
-    new = np.zeros_like(old)
+    
+    _, _, C = old.shape  # 获取输入数据的形状
+
+    new = np.zeros_like(old)  # 创建一个与输入数据相同形状的新数组
 
     if C == 16:
         # new[:, :, 0] = old[:, :, 2]

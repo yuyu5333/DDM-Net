@@ -112,7 +112,8 @@ class DatasetFromFolder(data.Dataset):
         return len(self.image_filenames)
 
 if __name__ == '__main__':
-    root = '/media/ssd1/zyg/'
+    # root = '/media/ssd1/zyg/'
+    root = '/home/dell/wyz/workGJS/dataset/CAVE'
     dataset = DatasetFromFolder(root)
     train_loader,_ = dataset.loaders(batch_size=32)
     for data in train_loader:

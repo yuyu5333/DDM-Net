@@ -32,7 +32,10 @@ def filter2(x, kernel, mode='same'):
     return signal.convolve2d(x, np.rot90(kernel, 2), mode=mode)
 
 def mask_input(GT_image):
+    # 创建一个全零矩阵，与输入图像大小相同，用于存储马赛克滤波后的图像
     mask = np.zeros((GT_image.shape[0], GT_image.shape[1], 16), dtype=np.float32)
+    
+    # 根据特定的滤波模式，将某些位置设置为1，形成16个子图像块
     mask[0::4, 0::4, 0] = 1
     mask[0::4, 1::4, 1] = 1
     mask[0::4, 2::4, 2] = 1
@@ -49,8 +52,13 @@ def mask_input(GT_image):
     mask[3::4, 1::4, 13] = 1
     mask[3::4, 2::4, 14] = 1
     mask[3::4, 3::4, 15] = 1
+    
+    # 将输入图像与马赛克滤波后的图像进行元素级乘法
     input_image = mask * GT_image
+    
+    # 返回经过马赛克滤波处理后的图像
     return input_image
+
 
 def compute_PSNR(estimated,real):
     estimated = np.float64(estimated)
@@ -96,16 +104,47 @@ def compute_ssim(estimate,real):
         SSIM_totoal += SSIM
     return SSIM_totoal / 16.0
 
-def compute_sam(x_true,x_pre):
-    buff1 = x_true*x_pre
+def compute_sam(x_true, x_pre):
+    """
+    计算光谱相角（Spectral Angle Mapper，SAM）。
+
+    SAM 是一种用于比较两个光谱向量之间的相似性的指标，通常用于遥感图像分析和匹配。
+
+    参数:
+    x_true (numpy.ndarray): 真实的光谱向量。
+    x_pre (numpy.ndarray): 预测的光谱向量。
+
+    返回:
+    float: 以度为单位的光谱相角。
+
+    计算步骤:
+    1. 计算真实光谱向量和预测光谱向量按元素相乘的结果。
+    2. 沿光谱波段维度对上一步的结果进行求和，得到两个向量的点积。
+    3. 避免除零错误，将点积中的零元素替换为接近零的值。
+    4. 计算真实光谱向量的 L2 范数，用于归一化分母。
+    5. 避免除零错误，将 L2 范数中的零元素替换为接近零的值。
+    6. 计算预测光谱向量的 L2 范数，用于归一化分母。
+    7. 避免除零错误，将 L2 范数中的零元素替换为接近零的值。
+    8. 计算两个向量的余弦相似性，即点积除以两个范数的乘积。
+    9. 归一化余弦相似性，确保其值在0到1之间。
+    10. 截断大于1的值为1，以确保余弦相似性不会超出1。
+    11. 计算余弦相似性的反余弦值，即光谱相角（SAM）的弧度表示。
+    12. 计算整个图像的平均光谱相角。
+    13. 将平均相角转换为角度制，并以度为单位返回 SAM。
+
+    SAM 通常用于遥感图像中不同像素点之间的光谱相似性度量，可用于分类、目标检测和光谱匹配等应用中。
+    """
+    # 以下为函数实现
+    
+    buff1 = x_true * x_pre
     buff2 = np.sum(buff1, 2)
     buff2[buff2 == 0] = 2.2204e-16
     buff4 = np.sqrt(np.sum(x_true * x_true, 2))
     buff4[buff4 == 0] = 2.2204e-16
     buff5 = np.sqrt(np.sum(x_pre * x_pre, 2))
     buff5[buff5 == 0] = 2.2204e-16
-    buff6 = buff2/buff4
-    buff8 = buff6/buff5
+    buff6 = buff2 / buff4
+    buff8 = buff6 / buff5
     buff8[buff8 > 1] = 1
     buff10 = np.arccos(buff8)
     buff9 = np.mean(np.arccos(buff8))
@@ -154,15 +193,14 @@ with torch.no_grad():
                 print("Processing", image_name)
                 sample_num = sample_num + 1
                 im_gt_y = np.load(opt.dataset + "/" + image_name)  # 512*512*16
-                ###\u539f\u672c\u7684im_gt_y\u6309\u7167\u5b9e\u9645\u76f8\u673a\u6ee4\u6ce2\u9635\u5217\u6392\u5217
+                # 使用实际相机滤波阵列对原始的im_gt_y进行马赛克滤波列排列
                 im_l_y = mask_input(im_gt_y)
-                ###\u6309\u7167\u5b9e\u9645\u76f8\u673a\u6ee4\u6ce2\u9635\u5217\u6392\u5217\u9006\u8fd8\u539f\u4e3a\u4ece\u5927\u5230\u5c0f\u7684\u987a\u5e8f
+                # 按照实际相机滤波阵列的顺序排列列逆还原为从大到小的顺序
                 im_l_y = reorder_imec(im_l_y)
                 im_gt_y = reorder_imec(im_gt_y)
                 im_input = im_l_y
 
-
-
+                # 将通道维度移动到最前面，以适应PyTorch模型输入要求
                 im_gt_y = im_gt_y.transpose(2, 0, 1)
                 im_l_y = im_l_y.transpose(2, 0, 1)
                 im_input = im_input.transpose(2, 0, 1) # C H W
@@ -172,7 +210,9 @@ with torch.no_grad():
                 raw = Variable(torch.from_numpy(raw).float()).view(1, -1, raw.shape[0], raw.shape[1])
                 estimated_Demosaic = np.zeros_like(im_l_y)
                 for index in range(16):
-                    sparse_image = im_l_y[index,:,:]
+                    # 从im_l_y中选择特定通道的子图像
+                    sparse_image = im_l_y[index, :, :]
+                    # 将sparse_image转换为PyTorch张量，并进行形状变换以满足深度学习模型的输入要求
                     sparse_image = Variable(torch.from_numpy(sparse_image).float()).view(1, -1, sparse_image.shape[0], sparse_image.shape[1])
                     if cuda:
                         # PPI_net = PPI_net.cuda()
@@ -186,59 +226,86 @@ with torch.no_grad():
                         model = model.cpu()
 
                     # estimated_PPI = PPI_net(raw)
+                    # 使用深度学习模型进行推断，将稀疏图像(sparse_image)和原始数据(raw)输入到模型中
                     estimated_PPI, estimated_demosaic = model(raw, sparse_image)
+
+                    # 将estimated_demosaic从GPU移到CPU上，以便后续处理
                     estimated_demosaic = estimated_demosaic.cpu()
+
+                    # 将estimated_demosaic的数据从PyTorch张量转换为NumPy数组，并将数据类型更改为float32
                     estimated_demosaic = estimated_demosaic.data[0].numpy().astype(np.float32)
-                    estimated_demosaic = estimated_demosaic * 255.
+
+                    # 将estimated_demosaic的像素值缩放到0-255范围内
+                    estimated_demosaic = estimated_demosaic * 255.0
+
+                    # 将小于0的像素值截断为0，将大于255的像素值截断为255，确保像素值在有效范围内
                     estimated_demosaic[estimated_demosaic < 0] = 0
-                    estimated_demosaic[estimated_demosaic > 255.] = 255.
+                    estimated_demosaic[estimated_demosaic > 255] = 255
 
-                    estimated_Demosaic[index,:,:] = estimated_demosaic
+                    # 将估计的Demosaic结果(estimated_demosaic)存储在结果数组(estimated_Demosaic)中的特定通道(index)中
+                    estimated_Demosaic[index, :, :] = estimated_demosaic
 
+                # 计算图像im_gt_y每个通道的像素和并除以16，得到平均值
                 target_PPI = im_gt_y.sum(axis=0) / 16.
+                # 将target_PPI转换为PyTorch的Variable，并将数据类型转换为float32
                 target_PPI = Variable(torch.from_numpy(target_PPI).float()).view(1, -1, target_PPI.shape[0], target_PPI.shape[1])
 
+                # 将target_PPI从CPU移到GPU上（如果CUDA可用）
                 target_PPI = target_PPI.cuda()
                 target_PPI = target_PPI
 
+                # 将estimated_PPI从GPU移到CPU上，以便后续处理
                 estimated_PPI = estimated_PPI.cpu()
+                # 将estimated_PPI的数据从PyTorch张量转换为NumPy数组，并将数据类型更改为float32
                 estimated_PPI = estimated_PPI.data[0].numpy().astype(np.float32)
-
+                
+                # 将estimated_PPI的像素值缩放到0-255范围内
                 estimated_PPI = estimated_PPI * 255.
                 estimated_PPI[estimated_PPI < 0] = 0
                 estimated_PPI[estimated_PPI > 255.] = 255.
 
+                # 将raw从GPU移到CPU上
                 raw = raw.cpu()
+                # 将raw的数据从PyTorch张量转换为NumPy数组，并将数据类型更改为float32
                 raw = raw.data[0].numpy().astype(np.float32)
+                # 将raw的像素值缩放到0-255范围内
                 raw = raw * 255.
                 raw[raw < 0] = 0
                 raw[raw > 255.] = 255.
 
+                # 将im_input从GPU移到CPU上
                 im_input = im_input.cpu()
                 im_input = im_input.data[0].numpy().astype(np.float32)
                 im_input = im_input * 255.
                 im_input[im_input < 0] = 0
                 im_input[im_input > 255.] = 255.
 
+                # 将target_PPI从GPU移到CPU上
                 target_PPI = target_PPI.cpu()
                 target_PPI = target_PPI.data[0].numpy().astype(np.float32)
                 target_PPI = target_PPI * 255.
                 target_PPI[target_PPI < 0] = 0
                 target_PPI[target_PPI > 255.] = 255.
 
+                # 将im_gt_y的像素值缩放到0-255范围内
                 im_gt_y = im_gt_y * 255.
                 im_gt_y[im_gt_y < 0] = 0
                 im_gt_y[im_gt_y > 255.] = 255.
 
+                # 计算估计PPI与真实PPI之间的PSNR
                 PPI_psnr_predicted = compute_PSNR(estimated_PPI[0,:,:],target_PPI[0,:,:])
                 print("PSNR_PPI      =",PPI_psnr_predicted)
+                
                 psnr_predicted = compute_PSNR(im_gt_y.transpose(2, 1, 0),estimated_Demosaic.transpose(2, 1, 0))
                 print("PSNR_Demosaic =", psnr_predicted)
+                
                 ssim_predicted_our = compute_ssim(im_gt_y.transpose(2, 1, 0), estimated_Demosaic.transpose(2, 1, 0))
                 print("SSIM_Demosaic =", ssim_predicted_our)
+                
                 sam_predicted = compute_sam(im_gt_y.transpose(2, 1, 0), estimated_Demosaic.transpose(2, 1, 0))
                 print("SAM_Demosaic  =", sam_predicted)
-
+                
+                # 创建目录名和文件名，将结果保存为图像文件
                 kind = image_name[:-4]
                 kind_dir = os.path.join('test_demosaic_result/' + kind + '/')
                 os.makedirs(kind_dir, exist_ok=True)
@@ -246,6 +313,8 @@ with torch.no_grad():
                 cv2.imwrite(PPI_path,estimated_PPI[0,:,:])
                 PPI_real_path = os.path.join(kind_dir + '/real_PPI.png')
                 cv2.imwrite(PPI_real_path, target_PPI[0,:,:])
+                
+                # 循环保存估计的Demosaic通道和真实的Demosaic通道作为图像文件
                 for channel in range(16):
                     demosaic_path = os.path.join(kind_dir + '/estimated_channel_'+str(channel)+'.png')
                     cv2.imwrite(demosaic_path, estimated_Demosaic[channel, :, :])
@@ -256,6 +325,7 @@ with torch.no_grad():
                 demosaic_real_path = os.path.join(kind_dir + '/raw.png')
                 cv2.imwrite(demosaic_real_path, raw[0,:,:])
 
+                # 更新PSNR和SAM的平均值
                 avg_PPI_psnr_predicted += PPI_psnr_predicted
                 avg_psnr_predicted += psnr_predicted
                 avg_sam_predicted += sam_predicted

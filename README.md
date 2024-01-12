@@ -13,3 +13,13 @@ Shumin Liu, Yuge Zhang, Jie Chen, Keng-Pang Lim and Susanto Rahardja, "A Deep Jo
   year={2022},
   publisher={IEEE}
 }
+
+# 推理
+
+```
+python interfer_demosaic.py --model /home/dell/wyz/workGJS/DDM-Net/checkpoint/model_in_paper.pth --dataset /home/dell/wyz/workGJS/dataset/train_data/Yellow_Rose
+```
+
+```
+python interfer_demosaic_less_memory.py --model /home/dell/wyz/workGJS/DDM-Net/checkpoint/model_in_paper.pth --dataset /home/dell/wyz/workGJS/dataset/train_data/Yellow_Rose
+```
