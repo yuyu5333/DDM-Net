@@ -5,6 +5,8 @@ from scipy import signal,misc
 import cv2
 from torch.nn import functional as F
 
+from torchsummary import summary
+
 class DPG(nn.Module):
     def __init__(self, num_channels = 1, base_channels = 24, num_residuals =2):
         super(DPG, self).__init__()
@@ -62,7 +64,9 @@ def weights_init_kaiming(m):
 
 if __name__=='__main__':
     inputs = np.array([np.float32(a) for a in range(32*60 * 60)]).reshape((32, 1, 60, 60))
-    inputs = torch.tensor(inputs)
-    net = DPG()
+    inputs = torch.tensor(inputs).cuda()  # 将输入数据移至 GPU
+    net = DPG().cuda()  # 确保模型也在 GPU 上
     outputs = net(inputs)
     print(outputs.shape)
+    print(net)
+    summary(net, inputs)

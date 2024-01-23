@@ -307,7 +307,7 @@ with torch.no_grad():
                 
                 # 创建目录名和文件名，将结果保存为图像文件
                 kind = image_name[:-4]
-                kind_dir = os.path.join('test_demosaic_result/' + kind + '/')
+                kind_dir = os.path.join('test_demosaic_result/CAVEALL/' + kind + '/')
                 os.makedirs(kind_dir, exist_ok=True)
                 PPI_path = os.path.join(kind_dir + '/estimated_PPI.png')
                 cv2.imwrite(PPI_path,estimated_PPI[0,:,:])

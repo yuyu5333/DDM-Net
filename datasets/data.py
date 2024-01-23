@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../')
 from torchvision.transforms import Compose, CenterCrop, ToTensor, Resize, ToPILImage
-# from .dataset_PPI import DatasetFromFolder_PPI
+from .dataset_PPI import DatasetFromFolder_PPI
 from .dataset import DatasetFromFolder
 
 def calculate_valid_crop_size(crop_size, upscale_factor):

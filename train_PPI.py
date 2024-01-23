@@ -140,6 +140,24 @@ def train(training_data_loader, optimizer, model, epoch, num_epochs):
         estimated_PPI = model(input_raw)
 
         # wavelet loss
+        '''
+        创建小波滤波器（Wavelet Filters）:
+            这里定义了六种不同的滤波器（filter1h, filter1v, filter1d, filter2h, filter2v, filter2d）。
+            这些滤波器用于提取图像的不同特征，例如水平、垂直和对角方向的细节。
+
+        小波变换（Wavelet Transformation）:
+            通过卷积操作（F.conv2d）将这些滤波器应用于输入图像（estimated_PPI - target_PPI）。
+            这里，estimated_PPI 和 target_PPI 可能分别代表估计的和目标图像。
+            这个步骤提取了图像的高频部分，也就是图像的细节。
+
+        计算小波损失（Wavelet Loss）:
+            对于每种滤波器，计算其对应的得分（score1h, score1v, score1d, score2h, score2v, score2d），
+            这是通过计算滤波后的图像与目标图像之间的均方误差来完成的。
+
+        平均损失:
+            最后，计算所有得分的平均值（wavelet_loss_PPI），以得到一个综合的小波损失值。
+            这个值可以用于训练过程中，帮助优化模型，使得重建或生成的图像在细节上更接近目标图像。
+        '''
         filter1h = torch.Tensor([[[[1, -1]]]]).cuda()
         wavelet1h = F.conv2d(estimated_PPI - target_PPI, filter1h, padding='valid')
         score1h = torch.mean(torch.sum(wavelet1h ** 2, dim=tuple(range(1, estimated_PPI.dim()))))
@@ -160,6 +178,24 @@ def train(training_data_loader, optimizer, model, epoch, num_epochs):
         wavelet2d = F.conv2d(estimated_PPI - target_PPI, filter2d, padding='valid')
         score2d = torch.mean(torch.sum(wavelet2d ** 2, dim=tuple(range(1, estimated_PPI.dim()))))
         wavelet_loss_PPI = (score1h + score1v + score1d + score2h + score2v + score2d)/6
+
+        '''
+        定义一个权重因子 alpha: 
+            这个值被设置为1。它用于调整小波损失（wavelet_loss_PPI）在总损失中的权重。
+            通过调整这个值，可以改变小波损失和其他损失度量在总损失中的相对重要性。
+
+        计算像素级损失（Pixel-Level Loss）:
+            PPI_loss 是通过计算 estimated_PPI（估计图像）和 target_PPI（目标图像）之间的均方误差来得到的。
+            这通常用于评估两个图像在像素级别上的相似度。
+
+        组合损失:
+            loss_x4 是通过将像素级损失 (PPI_loss) 和加权的小波损失 (wavelet_loss_PPI*alpha) 相加来计算的。
+            这个组合损失考虑了像素级别的精度和图像的高频细节（通过小波损失）。
+
+        总损失:
+            最后，将组合损失赋值给 loss。这个总损失 (loss) 可能用于后续的优化步骤，
+            例如在训练深度学习模型时通过反向传播来更新模型的权重。
+        '''
 
         alpha = 1
         

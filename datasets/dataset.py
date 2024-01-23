@@ -113,9 +113,10 @@ class DatasetFromFolder(data.Dataset):
 
 if __name__ == '__main__':
     # root = '/media/ssd1/zyg/'
-    root = '/home/dell/wyz/workGJS/dataset/CAVE'
+    root = '/home/dell/wyz/workGJS/dataset/CAVEnpy'
     dataset = DatasetFromFolder(root)
     train_loader,_ = dataset.loaders(batch_size=32)
     for data in train_loader:
         mosaicked,ref = data
         print(mosaicked.shape)
+        
