@@ -13,6 +13,7 @@ from PIL import Image
 from scipy import signal
 from My_function import reorder_imec, reorder_2filter
 
+from tqdm import tqdm
 
 def matlab_style_gauss2D(shape=(3, 3), sigma=0.5):
     """
@@ -152,12 +153,12 @@ def compute_sam(x_true, x_pre):
     return SAM
 
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 parser = argparse.ArgumentParser(description="PyTorch LapSRN Eval")
 parser.add_argument("--cuda", action="store_true", help="use cuda?")
-parser.add_argument("--model", default="/home/dell/wyz/workGJS/DDM-Net/checkpoint/model_in_paper.pth", type=str, help="model path")
+parser.add_argument("--model", default="checkpoint/model_in_paper.pth", type=str, help="model path")
 #parser.add_argument("--model", default="checkpoint/fine-tuning/final_model_epoch_4000.pth", type=str, help="model path")
-parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/RealIMG_GJS/test", type=str, help="dataset name, Default: CAVE")
+parser.add_argument("--dataset", default="test_data", type=str, help="dataset name, Default: CAVE")
 parser.add_argument("--scale", default=4, type=int, help="msfa_size, Default: 4")
 
 opt = parser.parse_args()
@@ -189,7 +190,69 @@ knum = 1
 with torch.no_grad():
     for ijk in range(knum):
         for i in range(1):
-            for image_name in sorted(os.listdir(image_list)):
+            # for image_name in sorted(os.listdir(image_list)):
+            # 在循环开始之前，将模型移至相应的设备
+            if cuda:
+                model = model.cuda()
+            else:
+                model = model.cpu()
+
+            for image_name in tqdm(sorted(os.listdir(image_list)), desc="Processing Images"):
+                print("Processing", image_name)
+                sample_num += 1
+
+                # 加载数据并进行必要的预处理
+                im_gt_y = np.load(opt.dataset + "/" + image_name)  # 512*512*16
+                im_l_y = mask_input(im_gt_y)  # 模拟相机滤波阵列
+                im_l_y = reorder_imec(im_l_y)
+                im_gt_y = reorder_imec(im_gt_y)
+                im_input = im_l_y.transpose(2, 0, 1)  # 调整为 C H W
+
+                # 转换为Tensor并移动到指定设备（CPU或GPU）
+                im_input_tensor = torch.from_numpy(im_input).float().unsqueeze(0)
+                raw_tensor = torch.from_numpy(im_input.sum(axis=0)).float().unsqueeze(0).unsqueeze(0)
+                if cuda:
+                    im_input_tensor = im_input_tensor.cuda()
+                    raw_tensor = raw_tensor.cuda()
+
+                estimated_Demosaic = np.zeros_like(im_l_y)
+
+                for index in range(16):
+                    # 处理每个通道
+                    sparse_image = torch.from_numpy(im_l_y[index, :, :]).float().unsqueeze(0).unsqueeze(0)
+                    if cuda:
+                        sparse_image = sparse_image.cuda()
+
+                    # 模型推断
+                    estimated_PPI, estimated_demosaic = model(raw_tensor, sparse_image)
+
+                    # 将结果转换回CPU（如果在GPU上）并转换为NumPy数组
+                    estimated_demosaic_np = estimated_demosaic.cpu().data[0].numpy().astype(np.float32)
+                    # 后处理
+                    estimated_demosaic_np = np.clip(estimated_demosaic_np * 255.0, 0, 255)
+                    estimated_Demosaic[index, :, :] = estimated_demosaic_np
+
+                    # 释放不再需要的Tensor
+                    del sparse_image, estimated_demosaic
+                    if cuda:
+                        torch.cuda.empty_cache()
+
+                # 后续处理和保存操作
+                # ...
+                # 创建目录名和文件名，将结果保存为图像文件
+                kind = image_name[:-4]
+                kind_dir = os.path.join('test_demosaic_result/TT31OnlyEPPT/' + kind + '/')
+                PPI_path = os.path.join(kind_dir + '/estimated_PPI.png')
+                cv2.imwrite(PPI_path,estimated_PPI[0,:,:])
+
+                # 清理和释放资源
+                del im_input_tensor, raw_tensor, estimated_PPI
+                if cuda:
+                    torch.cuda.empty_cache()
+
+            '''
+            
+            for image_name in tqdm(sorted(os.listdir(image_list)), desc="Processing Images"):
                 print("Processing", image_name)
                 sample_num = sample_num + 1
                 im_gt_y = np.load(opt.dataset + "/" + image_name)  # 512*512*16
@@ -227,11 +290,6 @@ with torch.no_grad():
 
                     # estimated_PPI = PPI_net(raw)
                     # 使用深度学习模型进行推断，将稀疏图像(sparse_image)和原始数据(raw)输入到模型中
-                    
-                    print(sparse_image.shape)
-                    
-                    
-                    
                     estimated_PPI, estimated_demosaic = model(raw, sparse_image)
 
                     # 将estimated_demosaic从GPU移到CPU上，以便后续处理
@@ -297,6 +355,13 @@ with torch.no_grad():
                 im_gt_y[im_gt_y < 0] = 0
                 im_gt_y[im_gt_y > 255.] = 255.
 
+                # 创建目录名和文件名，将结果保存为图像文件
+                kind = image_name[:-4]
+                kind_dir = os.path.join('test_demosaic_result/TT31OnlyEPPT/' + kind + '/')
+                PPI_path = os.path.join(kind_dir + '/estimated_PPI.png')
+                cv2.imwrite(PPI_path,estimated_PPI[0,:,:])
+            '''
+            '''
                 # 计算估计PPI与真实PPI之间的PSNR
                 PPI_psnr_predicted = compute_PSNR(estimated_PPI[0,:,:],target_PPI[0,:,:])
                 print("PSNR_PPI      =",PPI_psnr_predicted)
@@ -312,7 +377,7 @@ with torch.no_grad():
                 
                 # 创建目录名和文件名，将结果保存为图像文件
                 kind = image_name[:-4]
-                kind_dir = os.path.join('test_demosaic_result/TT31_MyTrainModel/' + kind + '/')
+                kind_dir = os.path.join('test_demosaic_result/TT31/' + kind + '/')
                 os.makedirs(kind_dir, exist_ok=True)
                 PPI_path = os.path.join(kind_dir + '/estimated_PPI.png')
                 cv2.imwrite(PPI_path,estimated_PPI[0,:,:])
@@ -335,14 +400,16 @@ with torch.no_grad():
                 avg_psnr_predicted += psnr_predicted
                 avg_sam_predicted += sam_predicted
                 avg_ssim_predicted_our += ssim_predicted_our
-
+                
                 del estimated_PPI
                 del raw
                 del im_input
+            '''
 
-print("Dataset   :", opt.dataset)
-print('sample_num:',sample_num)
-print("PPI_PSNR_avg_predicted=", avg_PPI_psnr_predicted/sample_num)
-print("PSNR    _avg_predicted=", avg_psnr_predicted / sample_num)
-print("SSIM    _avg_predicted=", avg_ssim_predicted_our / sample_num)
-print("SAM     _avg_predicted=", avg_sam_predicted / sample_num)
+
+# print("Dataset   :", opt.dataset)
+# print('sample_num:',sample_num)
+# print("PPI_PSNR_avg_predicted=", avg_PPI_psnr_predicted/sample_num)
+# print("PSNR    _avg_predicted=", avg_psnr_predicted / sample_num)
+# print("SSIM    _avg_predicted=", avg_ssim_predicted_our / sample_num)
+# print("SAM     _avg_predicted=", avg_sam_predicted / sample_num)

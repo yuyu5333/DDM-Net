@@ -29,7 +29,7 @@ parser.add_argument("--threads", type=int, default=0, help="Number of threads fo
 parser.add_argument("--momentum", default=0.9, type=float, help="Momentum, Default: 0.9")
 parser.add_argument("--weight-decay", "--wd", default=1e-4, type=float, help="weight decay, Default: 1e-4")
 parser.add_argument("--pretrained", default="", type=str, help="path to pretrained model (default: none)")
-parser.add_argument("--PPI_pretrained", default="checkpoint/pre-training/PPI_model_epoch_2000.pth", type=str, help="path to pretrained model (default: none)")
+parser.add_argument("--PPI_pretrained", default="/home/dell/wyz/workGJS/DDM-Net/checkpoint/pre-training/PPI_model_epoch_2000.pth", type=str, help="path to pretrained model (default: none)")
 parser.add_argument('--msfa_size', '-uf',  type=int, default=4, help="the size of square msfa")
 parser.add_argument("--train_dir", default="train_data", type=str, help="path to train dataset")
 parser.add_argument("--val_dir", default="test_data", type=str, help="path to validation dataset")

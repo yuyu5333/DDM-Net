@@ -21,7 +21,11 @@ python interfer_demosaic.py --model /home/dell/wyz/workGJS/DDM-Net/checkpoint/mo
 ```
 
 ```
-CUDA_VISIBLE_DEVICES=2 python interfer_demosaic_less_memory.py --model /home/dell/wyz/workGJS/DDM-Net/checkpoint/model_in_paper.pth --dataset /home/dell/wyz/workGJS/dataset/train_data/Yellow_Rose
+CUDA_VISIBLE_DEVICES=0 python interfer_demosaic_less_memory.py --model /home/dell/wyz/workGJS/DDM-Net/checkpoint/model_in_paper.pth --dataset /home/dell/wyz/workGJS/dataset/TT31npy
+```
+
+```
+CUDA_VISIBLE_DEVICES=2 python interfer_demosaic_less_mem_without_calcu.py --model /home/dell/wyz/workGJS/DDM-Net/checkpoint/model_in_paper.pth --dataset /home/dell/wyz/workGJS/dataset/TT31npy
 ```
 
 # 训练PPI

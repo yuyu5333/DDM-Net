@@ -1,2 +1,2 @@
 Epoch,batchSize,nEpochs,lr,step,cuda,resume,start_epoch,threads,momentum,weight_decay,pretrained,PPI_pretrained,msfa_size,train_dir,val_dir,seed,norm_flag,augment_flag
-1,1,2000,0.0005,500,True,0,1,0,0.9,0.0001,0,checkpoint/pre-training/PPI_model_epoch_2000.pth,4,/home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETrain,/home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETest,2684,False,False
+1,48,2000,0.0005,500,True,,1,0,0.9,0.0001,,/home/dell/wyz/workGJS/DDM-Net/checkpoint/pre-training/PPI_model_epoch_2000.pth,4,/home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETrain,/home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETest,7616,False,False
