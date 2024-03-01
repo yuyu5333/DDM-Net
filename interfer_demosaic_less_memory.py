@@ -209,9 +209,11 @@ with torch.no_grad():
                 im_input = Variable(torch.from_numpy(im_input).float()).view(1, -1, im_input.shape[1], im_input.shape[2])
                 raw = Variable(torch.from_numpy(raw).float()).view(1, -1, raw.shape[0], raw.shape[1])
                 estimated_Demosaic = np.zeros_like(im_l_y)
+                data_mat_sparse_image = {}
                 for index in range(16):
                     # 从im_l_y中选择特定通道的子图像
                     sparse_image = im_l_y[index, :, :]
+                    data_mat_sparse_image[index] = sparse_image
                     # 将sparse_image转换为PyTorch张量，并进行形状变换以满足深度学习模型的输入要求
                     sparse_image = Variable(torch.from_numpy(sparse_image).float()).view(1, -1, sparse_image.shape[0], sparse_image.shape[1])
                     if cuda:
@@ -227,10 +229,6 @@ with torch.no_grad():
 
                     # estimated_PPI = PPI_net(raw)
                     # 使用深度学习模型进行推断，将稀疏图像(sparse_image)和原始数据(raw)输入到模型中
-                    
-                    print(sparse_image.shape)
-                    
-                    
                     
                     estimated_PPI, estimated_demosaic = model(raw, sparse_image)
 
@@ -312,7 +310,7 @@ with torch.no_grad():
                 
                 # 创建目录名和文件名，将结果保存为图像文件
                 kind = image_name[:-4]
-                kind_dir = os.path.join('test_demosaic_result/TT31_MyTrainModel/' + kind + '/')
+                kind_dir = os.path.join('test_demosaic_result/RealIMG_GJS/' + kind + '/')
                 os.makedirs(kind_dir, exist_ok=True)
                 PPI_path = os.path.join(kind_dir + '/estimated_PPI.png')
                 cv2.imwrite(PPI_path,estimated_PPI[0,:,:])

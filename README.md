@@ -31,9 +31,50 @@ CUDA_VISIBLE_DEVICES=2 python interfer_demosaic_less_mem_without_calcu.py --mode
 # 训练PPI
 ```
 CUDA_VISIBLE_DEVICES=0 python train_PPI.py --train_dir /home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETrain --val_dir /home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETest --batchSize 4
+
 ```
 
 # 训练Model
 ```
 CUDA_VISIBLE_DEVICES=0 python train_demosaic.py --train_dir /home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETrain --val_dir /home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETest --batchSize 4
+```
+
+# CAVE
+
+## PPI
+
+```
+CUDA_VISIBLE_DEVICES=0 nohup python train_PPI.py --train_dir /home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETrain --val_dir /home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETest --batchSize 4 > /home/dell/wyz/workGJS/DDM-Net/log/CAVE/TrainPPIlog.txt 2>&1 &
+
+```
+
+## Model
+
+```
+CUDA_VISIBLE_DEVICES=2 nohup python train_demosaic.py --train_dir /home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETrain --val_dir /home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETest --batchSize 4 --PPI_pretrained /home/dell/wyz/workGJS/DDM-Net/checkpoint/PPI_Model/CAVE_PPI_model_epoch_3000.pth > /home/dell/wyz/workGJS/DDM-Net/log/CAVE/TrainModellog.txt 2>&1 &
+
+```
+
+## Fine Tuning
+```
+CUDA_VISIBLE_DEVICES=1 nohup python train_fine_tuning.py --train_dir /home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETrain --val_dir /home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETest --batchSize 4 --resume /home/dell/wyz/workGJS/DDM-Net/checkpoint/Model_Train/CAVE_main_model_epoch_2000.pth > /home/dell/wyz/workGJS/DDM-Net/log/CAVE/FineTrainModellog.txt 2>&1 &
+```
+
+# TT31
+
+```
+CUDA_VISIBLE_DEVICES=1 nohup python train_PPI.py --train_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Train --val_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Test --batchSize 4 > /home/dell/wyz/workGJS/DDM-Net/log/TT31/TrainPPIlog.txt 2>&1 &
+
+```
+
+## Model
+
+```
+CUDA_VISIBLE_DEVICES=0 nohup python train_demosaic.py --train_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Train --val_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Test --batchSize 4 --PPI_pretrained /home/dell/wyz/workGJS/DDM-Net/checkpoint/PPI_Model/TT31_PPI_model_epoch_3000.pth > /home/dell/wyz/workGJS/DDM-Net/log/TT31/TrainModellog.txt 2>&1 &
+
+```
+
+## Fine Tuning
+```
+CUDA_VISIBLE_DEVICES=0 nohup python train_fine_tuning.py --train_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Train --val_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Test --batchSize 4 --resume /home/dell/wyz/workGJS/DDM-Net/checkpoint/Model_Train/TT31_main_model_epoch_2000.pth --start-epoch 3001 > /home/dell/wyz/workGJS/DDM-Net/log/TT31/FineTrainModellog.txt 2>&1 &
 ```

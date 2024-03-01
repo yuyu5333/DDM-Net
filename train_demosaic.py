@@ -16,7 +16,7 @@ import cv2
 import torch.nn.functional as F
 from collections import OrderedDict
 
-os.environ['CUDA_VISIBLE_DEVICES'] ='0'
+# os.environ['CUDA_VISIBLE_DEVICES'] ='0'
 parser = argparse.ArgumentParser(description='PyTorch PPI network Training')
 parser.add_argument("--batchSize", type=int, default=16, help="training batch size")
 parser.add_argument("--nEpochs", type=int, default=2000, help="number of epochs to train for")

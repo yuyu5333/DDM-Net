@@ -16,7 +16,7 @@ import cv2
 import torch.nn.functional as F
 from collections import OrderedDict
 
-os.environ['CUDA_VISIBLE_DEVICES'] ='0'
+# os.environ['CUDA_VISIBLE_DEVICES'] ='0'
 parser = argparse.ArgumentParser(description='PyTorch PPI network Training')
 parser.add_argument("--batchSize", type=int, default=16, help="training batch size")
 parser.add_argument("--nEpochs", type=int, default=4000, help="number of epochs to train for")
@@ -24,7 +24,7 @@ parser.add_argument("--lr", type=float, default=5e-4, help="Learning Rate. Defau
 parser.add_argument("--step", type=int, default=500, help="Sets the learning rate to the initial LR decayed by momentum every n epochs, Default: n=10")
 parser.add_argument("--cuda", action="store_true", help="Use cuda?")
 parser.add_argument("--resume", default="checkpoint/main/main_model_epoch_2000.pth", type=str, help="Path to checkpoint (default: none)")
-parser.add_argument("--start-epoch", default=2001, type=int, help="Manual epoch number (useful on restarts)")
+parser.add_argument("--start_epoch", default=2001, type=int, help="Manual epoch number (useful on restarts)")
 parser.add_argument("--threads", type=int, default=0, help="Number of threads for data loader to use, Default: 1")
 parser.add_argument("--momentum", default=0.9, type=float, help="Momentum, Default: 0.9")
 parser.add_argument("--weight-decay", "--wd", default=1e-4, type=float, help="weight decay, Default: 1e-4")
@@ -258,7 +258,7 @@ def test(testing_data_loader, optimizer,model, epoch, num_epochs):
 
 
 def save_checkpoint(model, epoch):
-    model_folder = "checkpoint/fine-tuning/"
+    model_folder = "checkpoint/fine-tuning/CAVE"
     model_out_path = model_folder + "final_model_epoch_{}.pth".format(epoch)
     state = {"epoch": epoch ,"model": model}
     if not os.path.exists(model_folder):
@@ -268,7 +268,7 @@ def save_checkpoint(model, epoch):
     print("Checkpoint saved to {}".format(model_out_path))
 
 def save_opt(opt):
-    statistics_folder = "checkpoint/fine-tuning/"
+    statistics_folder = "checkpoint/fine-tuning/CAVE"
     if not os.path.exists(statistics_folder):
         os.makedirs(statistics_folder)
     data_frame = pd.DataFrame(
@@ -277,7 +277,7 @@ def save_opt(opt):
     print("save--opt")
 
 def save_statistics(opt, results, epoch):
-    statistics_folder = "checkpoint/fine-tuning/"
+    statistics_folder = "checkpoint/fine-tuning/CAVE"
     if not os.path.exists(statistics_folder):
         os.makedirs(statistics_folder)
     data_frame = pd.DataFrame(
