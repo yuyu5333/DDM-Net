@@ -78,3 +78,50 @@ CUDA_VISIBLE_DEVICES=0 nohup python train_demosaic.py --train_dir /home/dell/wyz
 ```
 CUDA_VISIBLE_DEVICES=0 nohup python train_fine_tuning.py --train_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Train --val_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Test --batchSize 4 --resume /home/dell/wyz/workGJS/DDM-Net/checkpoint/Model_Train/TT31_main_model_epoch_2000.pth --start-epoch 3001 > /home/dell/wyz/workGJS/DDM-Net/log/TT31/FineTrainModellog.txt 2>&1 &
 ```
+
+# TT31_25
+
+## PPI
+```
+CUDA_VISIBLE_DEVICES=1 nohup python train_PPI.py --train_dir /home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Train --val_dir /home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Test --batchSize 4 --msfa_size 5 --resume False > /home/dell/wyz/workGJS/DDM-Net/log/TT31_25/TrainPPIlog.txt 2>&1 &
+
+CUDA_VISIBLE_DEVICES=1 python train_PPI.py --train_dir /home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Train --val_dir /home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Test --batchSize 4 --msfa_size 5 --resume False
+```
+
+## Model
+
+```
+CUDA_VISIBLE_DEVICES=1 nohup python train_demosaic.py --train_dir /home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Train --val_dir /home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Test --batchSize 4 --msfa_size 5 --PPI_pretrained /home/dell/wyz/workGJS/DDM-Net/checkpoint/PPI_Model/TT31_25_PPI_model_epoch_3000.pth > /home/dell/wyz/workGJS/DDM-Net/log/TT31_25/TrainModellog2.txt 2>&1 &
+
+CUDA_VISIBLE_DEVICES=0 python train_demosaic.py --train_dir /home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Train --val_dir /home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Test --batchSize 4 --msfa_size 5 --PPI_pretrained /home/dell/wyz/workGJS/DDM-Net/checkpoint/PPI_Model/TT31_25_PPI_model_epoch_1000.pth
+
+```
+
+## Fine Tuning
+```
+CUDA_VISIBLE_DEVICES=0 nohup python train_fine_tuning.py --train_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Train --val_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Test --batchSize 4 --resume /home/dell/wyz/workGJS/DDM-Net/checkpoint/PPI_Model/TT31_25_PPI_model_epoch_1000.pth --start-epoch 3001 > /home/dell/wyz/workGJS/DDM-Net/log/TT31/FineTrainModellog.txt 2>&1 &
+```
+
+# GJS_My_25
+
+## PPI
+```
+CUDA_VISIBLE_DEVICES=0 nohup python train_PPI.py --train_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Train --val_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Test --batchSize 32 --msfa_size 5 --resume False > /home/dell/wyz/workGJS/DDM-Net/log/GJS_25/TrainPPIlog.txt 2>&1 &
+
+tail -f /home/dell/wyz/workGJS/DDM-Net/log/GJS_25/TrainPPIlog.txt
+
+CUDA_VISIBLE_DEVICES=0 python train_PPI.py --train_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Train --val_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Test --batchSize 4 --msfa_size 5 --resume False
+
+```
+
+## Model
+```
+CUDA_VISIBLE_DEVICES=1 nohup python train_demosaic.py --train_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Train --val_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Test --batchSize 32 --msfa_size 5 --PPI_pretrained /home/dell/wyz/workGJS/DDM-Net/checkpoint/PPI_Model/GJS_25_PPI_model_epoch_200.pth > /home/dell/wyz/workGJS/DDM-Net/log/GJS_25/TrainModellog.txt 2>&1 &
+
+```
+
+## Fine Tuning
+```
+CUDA_VISIBLE_DEVICES=0 nohup python train_fine_tuning.py --train_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Train --val_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Test --batchSize 4 --resume /home/dell/wyz/workGJS/DDM-Net/checkpoint/PPI_Model/TT31_25_PPI_model_epoch_1000.pth --start-epoch 3001 > /home/dell/wyz/workGJS/DDM-Net/log/TT31/FineTrainModellog.txt 2>&1 &
+```
+

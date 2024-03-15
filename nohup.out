@@ -1,0 +1,9 @@
+usage: train_demosaic.py [-h] [--batchSize BATCHSIZE] [--nEpochs NEPOCHS]
+                         [--lr LR] [--step STEP] [--cuda] [--resume RESUME]
+                         [--start-epoch START_EPOCH] [--threads THREADS]
+                         [--momentum MOMENTUM] [--weight-decay WEIGHT_DECAY]
+                         [--pretrained PRETRAINED]
+                         [--PPI_pretrained PPI_PRETRAINED]
+                         [--msfa_size MSFA_SIZE] [--train_dir TRAIN_DIR]
+                         [--val_dir VAL_DIR]
+train_demosaic.py: error: unrecognized arguments: /home/dell/wyz/workGJS/DDM-Net/log/GJS_25/TrainModellog.txt

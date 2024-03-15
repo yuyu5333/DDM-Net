@@ -34,6 +34,10 @@ def randcrop(a, crop_size):
 def calculate_valid_crop_size(crop_size, upscale_factor):
     return crop_size - (crop_size % upscale_factor)
 
+band_msc = 25
+band_msc_f = 25.0
+mask = 5
+
 class DatasetFromFolder(data.Dataset):
     def __init__(self, image_dir, norm_flag, input_transform=None, target_transform=None, augment=False):
         super(DatasetFromFolder, self).__init__()
@@ -64,7 +68,8 @@ class DatasetFromFolder(data.Dataset):
             max_raw = np.max(input_image)
             max_subband = np.max(np.max(input_image, axis=0), 0)
             norm_factor = max_raw / max_subband
-            for bn in range(16):
+            # ToDo 确认band
+            for bn in range(band_msc):
                 input_image[:, :, bn] = input_image[:, :, bn] * norm_factor[bn]
         input_image = randcrop(input_image, self.crop_size)
         if self.augment:
@@ -77,11 +82,11 @@ class DatasetFromFolder(data.Dataset):
         target = input_image.copy()
         #ToDo 确认这里的mask
         ###原本的im_gt_y按照实际相机滤波阵列排列
-        input_image = mask_input(target,4)
+        input_image = mask_input(target, mask)
         ###按照实际相机滤波阵列排列逆还原为从大到小的顺序
         input_image = reorder_imec(input_image) # sparase_image
         target = reorder_imec(target)  # multi-spectral
-        random_index = randint(0, 15)
+        random_index = randint(0, band_msc-1)
 
         if self.input_transform:
             raw = input_image.sum(axis=2)   #  how sum(axis=0 or 2)  2
@@ -94,7 +99,8 @@ class DatasetFromFolder(data.Dataset):
             # print(input_image.size())
             # print(raw.size())
         if self.target_transform:
-            target_PPI = target.sum(axis=2)/16.0
+            # ToDo 确认band
+            target_PPI = target.sum(axis=2)/band_msc_f
             target_PPI = self.target_transform(target_PPI)
             target_demosaic = target[ :, :,random_index]
             target_demosaic = np.expand_dims(target_demosaic, 0)

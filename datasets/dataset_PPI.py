@@ -33,6 +33,10 @@ def randcrop(a, crop_size):
 def calculate_valid_crop_size(crop_size, upscale_factor):
     return crop_size - (crop_size % upscale_factor)
 
+band_msc = 25
+band_msc_f = 25.0
+mask = 5
+
 class DatasetFromFolder_PPI(data.Dataset):
     def __init__(self, image_dir,norm_flag, input_transform=None, target_transform=None, augment=False):
         super(DatasetFromFolder_PPI, self).__init__()
@@ -54,7 +58,7 @@ class DatasetFromFolder_PPI(data.Dataset):
         self.augment = augment
         self.norm_flag = norm_flag
     def __getitem__(self, index):
-        # input_image = load_img(self.image_filenames[index]) # 512 512 16
+        # input_image = load_img(self.image_filenames[index]) # 512 512 16 or 512 512 25
         input_image = np.load(self.image_filenames[index])
         input_image = input_image.astype(np.float32)
         if self.norm_flag:
@@ -62,8 +66,11 @@ class DatasetFromFolder_PPI(data.Dataset):
             max_raw = np.max(input_image)
             max_subband = np.max(np.max(input_image, axis=0), 0)
             norm_factor = max_raw / max_subband
-            for bn in range(16):
+            # ToDo 这里确认波段是16还是25
+            # for bn in range(16):
+            for bn in range(band_msc):
                 input_image[:, :, bn] = input_image[:, :, bn] * norm_factor[bn]
+        # print("input_image shape: ", input_image.shape)
         input_image = randcrop(input_image, self.crop_size)
         if self.augment:
             if np.random.uniform() < 0.5:
@@ -75,7 +82,7 @@ class DatasetFromFolder_PPI(data.Dataset):
         target = input_image.copy()
         #ToDo 确认这里的mask
         ###原本的im_gt_y按照实际相机滤波阵列排列
-        input_image = mask_input(target,4)
+        input_image = mask_input(target, mask)
         ###按照实际相机滤波阵列排列逆还原为从大到小的顺序
         input_image = reorder_imec(input_image) # sparase_image
         target = reorder_imec(target)  # multi-spectral
@@ -87,7 +94,8 @@ class DatasetFromFolder_PPI(data.Dataset):
             # print(input_image.size())
             # print(raw.size())
         if self.target_transform:
-            target_PPI = target.sum(axis=2)/16.0
+            # ToDo 这里确认波段是 25 还是 16
+            target_PPI = target.sum(axis=2)/band_msc_f
             target_PPI = self.target_transform(target_PPI)
             # target = self.target_transform(target)/255.0
 

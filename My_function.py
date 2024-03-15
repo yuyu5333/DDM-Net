@@ -106,6 +106,68 @@ def reorder_imec(old):
         new[:, :, 24] = old[:, :, 4]
         return new
 
+def reorder_imec_GJS(old):
+    """
+    重新排列多频带立体影像数据，使中心波长从小到大排列。
+
+    参数:
+    old (numpy.ndarray): 输入的多频带立体影像数据，具有形状 (_, _, C)，其中 C 是通道数。
+
+    返回:
+    numpy.ndarray: 重新排列后的多频带立体影像数据，具有相同的形状 (_, _, C)。
+    """
+    ### reorder the multiband cube, making the center wavelength from small to large
+    
+    _, _, C = old.shape  # 获取输入数据的形状
+
+    new = np.zeros_like(old)  # 创建一个与输入数据相同形状的新数组
+
+    if C == 16:
+        new[:, :, 0] = old[:, :, 6]
+        new[:, :, 1] = old[:, :, 7]
+        new[:, :, 2] = old[:, :, 5]
+        new[:, :, 3] = old[:, :, 4]
+        new[:, :, 4] = old[:, :, 14]
+        new[:, :, 5] = old[:, :, 15]
+        new[:, :, 6] = old[:, :, 13]
+        new[:, :, 7] = old[:, :, 12]
+        new[:, :, 8] = old[:, :, 10]
+        new[:, :, 9] = old[:, :, 11]
+        new[:, :, 10] = old[:, :, 9]
+        new[:, :, 11] = old[:, :, 8]
+        new[:, :, 12] = old[:, :, 2]
+        new[:, :, 13] = old[:, :, 3]
+        new[:, :, 14] = old[:, :, 1]
+        new[:, :, 15] = old[:, :, 0]
+        return new
+    elif C==25:
+        new[:, :, 0] = old[:, :, 9]
+        new[:, :, 1] = old[:, :, 14]
+        new[:, :, 2] = old[:, :, 13]
+        new[:, :, 3] = old[:, :, 12]
+        new[:, :, 4] = old[:, :, 10]
+        new[:, :, 5] = old[:, :, 11]
+        new[:, :, 6] = old[:, :, 8]
+        new[:, :, 7] = old[:, :, 7]
+        new[:, :, 8] = old[:, :, 5]
+        new[:, :, 9] = old[:, :, 6]
+        new[:, :, 10] = old[:, :, 23]
+        new[:, :, 11] = old[:, :, 22]
+        new[:, :, 12] = old[:, :, 20]
+        new[:, :, 13] = old[:, :, 21]
+        new[:, :, 14] = old[:, :, 3]
+        new[:, :, 15] = old[:, :, 2]
+        new[:, :, 16] = old[:, :, 0]
+        new[:, :, 17] = old[:, :, 1]
+        new[:, :, 18] = old[:, :, 18]
+        new[:, :, 19] = old[:, :, 17]
+        new[:, :, 20] = old[:, :, 15]
+        new[:, :, 21] = old[:, :, 16]
+        new[:, :, 22] = old[:, :, 24]
+        new[:, :, 23] = old[:, :, 19]
+        new[:, :, 24] = old[:, :, 4]
+        return new
+
 def reorder_2filter(old):
     ###从波段中心从小到大的排列，reorder为滤波器从左往右依次的顺序（也就是GT图中的顺序）
     ### reorder the multiband cube as the real pattern in MSFA

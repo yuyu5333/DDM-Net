@@ -11,8 +11,7 @@ from libtiff import TIFF, TIFFfile, TIFFimage
 from networks.DPDN import DPDN
 from PIL import Image
 from scipy import signal
-from My_function import reorder_imec, reorder_2filter
-
+from My_function import reorder_imec, reorder_2filter, reorder_imec_GJS
 
 def matlab_style_gauss2D(shape=(3, 3), sigma=0.5):
     """
@@ -52,6 +51,50 @@ def mask_input(GT_image):
     mask[3::4, 1::4, 13] = 1
     mask[3::4, 2::4, 14] = 1
     mask[3::4, 3::4, 15] = 1
+    
+    # 将输入图像与马赛克滤波后的图像进行元素级乘法
+    input_image = mask * GT_image
+    
+    np.save('/home/dell/wyz/workGJS/DDM-Net/test_demosaic_result/SaveTempValue/input_image_mask.npy', input_image)
+    print("save input_image_mask success")
+    
+    # 返回经过马赛克滤波处理后的图像
+    return input_image
+
+def mask_input_25(GT_image):
+    # 创建一个全零矩阵，与输入图像大小相同，用于存储马赛克滤波后的图像
+    mask = np.zeros((GT_image.shape[0], GT_image.shape[1], 25), dtype=np.float32)
+    
+    # 根据特定的滤波模式，将某些位置设置为1，形成25个子图像块
+    mask[0::5, 0::5, 0] = 1
+    mask[0::5, 1::5, 1] = 1
+    mask[0::5, 2::5, 2] = 1
+    mask[0::5, 3::5, 3] = 1
+    mask[0::5, 4::5, 4] = 1
+    
+    mask[1::5, 0::5, 5] = 1
+    mask[1::5, 1::5, 6] = 1
+    mask[1::5, 2::5, 7] = 1
+    mask[1::5, 3::5, 8] = 1
+    mask[1::5, 4::5, 9] = 1
+    
+    mask[2::5, 0::5, 10] = 1
+    mask[2::5, 1::5, 11] = 1
+    mask[2::5, 2::5, 12] = 1
+    mask[2::5, 3::5, 13] = 1
+    mask[2::5, 4::5, 14] = 1
+    
+    mask[3::5, 0::5, 15] = 1
+    mask[3::5, 1::5, 16] = 1
+    mask[3::5, 2::5, 17] = 1
+    mask[3::5, 3::5, 18] = 1
+    mask[3::5, 4::5, 19] = 1
+    
+    mask[4::5, 0::5, 20] = 1
+    mask[4::5, 1::5, 21] = 1
+    mask[4::5, 2::5, 22] = 1
+    mask[4::5, 3::5, 23] = 1
+    mask[4::5, 4::5, 24] = 1
     
     # 将输入图像与马赛克滤波后的图像进行元素级乘法
     input_image = mask * GT_image
@@ -158,10 +201,14 @@ def compute_sam(x_true, x_pre):
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 parser = argparse.ArgumentParser(description="PyTorch LapSRN Eval")
 parser.add_argument("--cuda", action="store_true", help="use cuda?")
-parser.add_argument("--model", default="/home/dell/wyz/workGJS/DDM-Net/checkpoint/model_in_paper.pth", type=str, help="model path")
+parser.add_argument("--model", default="/home/dell/wyz/workGJS/DDM-Net/checkpoint/Model_Train/TT31_25_main_model_epoch_2000.pth", type=str, help="model path")
 #parser.add_argument("--model", default="checkpoint/fine-tuning/final_model_epoch_4000.pth", type=str, help="model path")
-parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/RealIMG_GJS/test_repeat16", type=str, help="dataset name, Default: CAVE")
-parser.add_argument("--scale", default=4, type=int, help="msfa_size, Default: 4")
+# parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/RealIMG_GJS/test_repeat16", type=str, help="dataset name, Default: CAVE")
+parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Test", type=str, help="dataset name, Default: CAVE")
+parser.add_argument("--dataone", default="/home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Test/Tape.npy", type=str, help="dataset name, Default: CAVE")
+parser.add_argument("--scale", default=5, type=int, help="msfa_size, Default: 4")
+parser.add_argument("--result_dir", default="TT31_25_2000/")
+
 
 opt = parser.parse_args()
 cuda = True
@@ -195,19 +242,38 @@ with torch.no_grad():
             for image_name in sorted(os.listdir(image_list)):
                 print("Processing", image_name)
                 sample_num = sample_num + 1
-                im_gt_y = np.load(opt.dataset + "/" + image_name)  # 512*512*16
-                # 使用实际相机滤波阵列对原始的im_gt_y进行马赛克滤波列排列
-                im_l_y = mask_input(im_gt_y)
+                # im_gt_y = np.load(opt.dataset + "/" + image_name)  # 512*512*16
+                # # 使用实际相机滤波阵列对原始的im_gt_y进行马赛克滤波列排列
+                # im_l_y = mask_input(im_gt_y)
+                # # 按照实际相机滤波阵列的顺序排列列逆还原为从大到小的顺序
+                # im_l_y = reorder_imec(im_l_y)
+                # im_gt_y = reorder_imec(im_gt_y)
+                # im_input = im_l_y
+
+                # im_input 就是马赛克图像，加载一个马赛克图像进来
+                # im_input = np.load(opt.dataset + "/" + image_name)  # 512*512*16
+                
+                # im_l_y 是拥有16个维度的图像，每个维度是稀疏的图像，加载一个16维度的马赛克图像，再处理一下每个维度的稀疏性
+                # input_raw_16 = np.load(opt.dataset + "/" + image_name)
+                # 使用实际相机滤波阵列对原始的input_raw_16进行马赛克滤波列排列
+                # im_l_y = mask_input(input_raw_16)
+                # im_gt_y = np.load(opt.dataone)
+                
+                im_gt_y = np.load(opt.dataset + "/" + image_name)
+                # # 使用实际相机滤波阵列对原始的im_gt_y进行马赛克滤波列排列
+                im_l_y = mask_input_25(im_gt_y)
                 # 按照实际相机滤波阵列的顺序排列列逆还原为从大到小的顺序
-                im_l_y = reorder_imec(im_l_y)
-                im_gt_y = reorder_imec(im_gt_y)
+                im_l_y = reorder_imec_GJS(im_l_y)
+
                 im_input = im_l_y
 
                 # 将通道维度移动到最前面，以适应PyTorch模型输入要求
-                im_gt_y = im_gt_y.transpose(2, 0, 1)
+                # im_gt_y = im_gt_y.transpose(2, 0, 1)
                 im_l_y = im_l_y.transpose(2, 0, 1)
                 im_input = im_input.transpose(2, 0, 1) # C H W
                 raw = im_input.sum(axis=0)   # MSFA
+
+                # print("here")
 
                 im_input = Variable(torch.from_numpy(im_input).float()).view(1, -1, im_input.shape[1], im_input.shape[2])
                 raw = Variable(torch.from_numpy(raw).float()).view(1, -1, raw.shape[0], raw.shape[1])
@@ -252,13 +318,13 @@ with torch.no_grad():
                     estimated_Demosaic[index, :, :] = estimated_demosaic
 
                 # 计算图像im_gt_y每个通道的像素和并除以16，得到平均值
-                target_PPI = im_gt_y.sum(axis=0) / 16.
+                # target_PPI = im_gt_y.sum(axis=0) / 16.
                 # 将target_PPI转换为PyTorch的Variable，并将数据类型转换为float32
-                target_PPI = Variable(torch.from_numpy(target_PPI).float()).view(1, -1, target_PPI.shape[0], target_PPI.shape[1])
+                # target_PPI = Variable(torch.from_numpy(target_PPI).float()).view(1, -1, target_PPI.shape[0], target_PPI.shape[1])
 
                 # 将target_PPI从CPU移到GPU上（如果CUDA可用）
-                target_PPI = target_PPI.cuda()
-                target_PPI = target_PPI
+                # target_PPI = target_PPI.cuda()
+                # target_PPI = target_PPI
 
                 # 将estimated_PPI从GPU移到CPU上，以便后续处理
                 estimated_PPI = estimated_PPI.cpu()
@@ -287,64 +353,65 @@ with torch.no_grad():
                 im_input[im_input > 255.] = 255.
 
                 # 将target_PPI从GPU移到CPU上
-                target_PPI = target_PPI.cpu()
-                target_PPI = target_PPI.data[0].numpy().astype(np.float32)
-                target_PPI = target_PPI * 255.
-                target_PPI[target_PPI < 0] = 0
-                target_PPI[target_PPI > 255.] = 255.
+                # target_PPI = target_PPI.cpu()
+                # target_PPI = target_PPI.data[0].numpy().astype(np.float32)
+                # target_PPI = target_PPI * 255.
+                # target_PPI[target_PPI < 0] = 0
+                # target_PPI[target_PPI > 255.] = 255.
 
                 # 将im_gt_y的像素值缩放到0-255范围内
-                im_gt_y = im_gt_y * 255.
-                im_gt_y[im_gt_y < 0] = 0
-                im_gt_y[im_gt_y > 255.] = 255.
+                # im_gt_y = im_gt_y * 255.
+                # im_gt_y[im_gt_y < 0] = 0
+                # im_gt_y[im_gt_y > 255.] = 255.
 
                 # 计算估计PPI与真实PPI之间的PSNR
-                PPI_psnr_predicted = compute_PSNR(estimated_PPI[0,:,:],target_PPI[0,:,:])
-                print("PSNR_PPI      =",PPI_psnr_predicted)
+                # PPI_psnr_predicted = compute_PSNR(estimated_PPI[0,:,:],target_PPI[0,:,:])
+                # print("PSNR_PPI      =",PPI_psnr_predicted)
                 
-                psnr_predicted = compute_PSNR(im_gt_y.transpose(2, 1, 0),estimated_Demosaic.transpose(2, 1, 0))
-                print("PSNR_Demosaic =", psnr_predicted)
+                # psnr_predicted = compute_PSNR(im_gt_y.transpose(2, 1, 0),estimated_Demosaic.transpose(2, 1, 0))
+                # print("PSNR_Demosaic =", psnr_predicted)
                 
-                ssim_predicted_our = compute_ssim(im_gt_y.transpose(2, 1, 0), estimated_Demosaic.transpose(2, 1, 0))
-                print("SSIM_Demosaic =", ssim_predicted_our)
+                # ssim_predicted_our = compute_ssim(im_gt_y.transpose(2, 1, 0), estimated_Demosaic.transpose(2, 1, 0))
+                # print("SSIM_Demosaic =", ssim_predicted_our)
                 
-                sam_predicted = compute_sam(im_gt_y.transpose(2, 1, 0), estimated_Demosaic.transpose(2, 1, 0))
-                print("SAM_Demosaic  =", sam_predicted)
+                # sam_predicted = compute_sam(im_gt_y.transpose(2, 1, 0), estimated_Demosaic.transpose(2, 1, 0))
+                # print("SAM_Demosaic  =", sam_predicted)
                 
                 # 创建目录名和文件名，将结果保存为图像文件
                 kind = image_name[:-4]
-                kind_dir = os.path.join('/home/dell/wyz/workGJS/DDM-Net/test_demosaic_result/RealIMG_GJS/' + kind + '/')
+                result_dir = '/home/dell/wyz/workGJS/DDM-Net/test_demosaic_result/'
+                kind_dir = os.path.join(result_dir + opt.result_dir + kind + '/')
                 print(kind_dir)
                 os.makedirs(kind_dir, exist_ok=True)
                 PPI_path = os.path.join(kind_dir + '/estimated_PPI.png')
                 cv2.imwrite(PPI_path,estimated_PPI[0,:,:])
-                PPI_real_path = os.path.join(kind_dir + '/real_PPI.png')
-                cv2.imwrite(PPI_real_path, target_PPI[0,:,:])
+                # PPI_real_path = os.path.join(kind_dir + '/real_PPI.png')
+                # cv2.imwrite(PPI_real_path, target_PPI[0,:,:])
                 
                 # 循环保存估计的Demosaic通道和真实的Demosaic通道作为图像文件
                 for channel in range(16):
                     demosaic_path = os.path.join(kind_dir + '/estimated_channel_'+str(channel)+'.png')
                     cv2.imwrite(demosaic_path, estimated_Demosaic[channel, :, :])
 
-                    demosaic_real_path = os.path.join(kind_dir + '/real_channel_' + str(channel) + '.png')
-                    cv2.imwrite(demosaic_real_path, im_gt_y[channel, :, :])
+                    # demosaic_real_path = os.path.join(kind_dir + '/real_channel_' + str(channel) + '.png')
+                    # cv2.imwrite(demosaic_real_path, im_gt_y[channel, :, :])
 
-                demosaic_real_path = os.path.join(kind_dir + '/raw.png')
+                demosaic_real_path = os.path.join(kind_dir +  '/raw.png')
                 cv2.imwrite(demosaic_real_path, raw[0,:,:])
 
                 # 更新PSNR和SAM的平均值
-                avg_PPI_psnr_predicted += PPI_psnr_predicted
-                avg_psnr_predicted += psnr_predicted
-                avg_sam_predicted += sam_predicted
-                avg_ssim_predicted_our += ssim_predicted_our
+                # avg_PPI_psnr_predicted += PPI_psnr_predicted
+                # avg_psnr_predicted += psnr_predicted
+                # avg_sam_predicted += sam_predicted
+                # avg_ssim_predicted_our += ssim_predicted_our
 
                 del estimated_PPI
                 del raw
                 del im_input
 
 print("Dataset   :", opt.dataset)
-print('sample_num:',sample_num)
-print("PPI_PSNR_avg_predicted=", avg_PPI_psnr_predicted/sample_num)
-print("PSNR    _avg_predicted=", avg_psnr_predicted / sample_num)
-print("SSIM    _avg_predicted=", avg_ssim_predicted_our / sample_num)
-print("SAM     _avg_predicted=", avg_sam_predicted / sample_num)
+# print('sample_num:',sample_num)
+# print("PPI_PSNR_avg_predicted=", avg_PPI_psnr_predicted/sample_num)
+# print("PSNR    _avg_predicted=", avg_psnr_predicted / sample_num)
+# print("SSIM    _avg_predicted=", avg_ssim_predicted_our / sample_num)
+# print("SAM     _avg_predicted=", avg_sam_predicted / sample_num)
