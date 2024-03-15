@@ -4,3 +4,6 @@
 test_demosaic_result
 train_data
 test_data
+*.onnx
+checkpoint
+*.npy
