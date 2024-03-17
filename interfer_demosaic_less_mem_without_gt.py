@@ -198,17 +198,20 @@ def compute_sam(x_true, x_pre):
     return SAM
 
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 parser = argparse.ArgumentParser(description="PyTorch LapSRN Eval")
 parser.add_argument("--cuda", action="store_true", help="use cuda?")
-parser.add_argument("--model", default="/home/dell/wyz/workGJS/DDM-Net/checkpoint/Model_Train/TT31_25_main_model_epoch_2000.pth", type=str, help="model path")
+parser.add_argument("--model", default="/home/dell/wyz/workGJS/DDM-Net/checkpoint/main/main_model_epoch_500.pth", type=str, help="model path")
 #parser.add_argument("--model", default="checkpoint/fine-tuning/final_model_epoch_4000.pth", type=str, help="model path")
 # parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/RealIMG_GJS/test_repeat16", type=str, help="dataset name, Default: CAVE")
-parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Test", type=str, help="dataset name, Default: CAVE")
-parser.add_argument("--dataone", default="/home/dell/wyz/workGJS/dataset/TT31npy25/TT31npy25Test/Tape.npy", type=str, help="dataset name, Default: CAVE")
-parser.add_argument("--scale", default=5, type=int, help="msfa_size, Default: 4")
-parser.add_argument("--result_dir", default="TT31_25_2000/")
+parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/interfer1time", type=str, help="dataset name, Default: CAVE")
+# parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/RealIMG_GJS/scenery_npy_25_dim25", type=str, help="dataset name, Default: CAVE")
 
+parser.add_argument("--dataone", default="/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/TrainALL/shop1.npy", type=str, help="dataset name, Default: CAVE")
+parser.add_argument("--scale", default=5, type=int, help="msfa_size, Default: 4")
+
+# parser.add_argument("--result_dir", default="RealIMG_GJS/scenery/")
+parser.add_argument("--result_dir", default="Temp/")
 
 opt = parser.parse_args()
 cuda = True
@@ -255,11 +258,14 @@ with torch.no_grad():
                 
                 # im_l_y 是拥有16个维度的图像，每个维度是稀疏的图像，加载一个16维度的马赛克图像，再处理一下每个维度的稀疏性
                 # input_raw_16 = np.load(opt.dataset + "/" + image_name)
+                
                 # 使用实际相机滤波阵列对原始的input_raw_16进行马赛克滤波列排列
                 # im_l_y = mask_input(input_raw_16)
-                # im_gt_y = np.load(opt.dataone)
                 
-                im_gt_y = np.load(opt.dataset + "/" + image_name)
+                im_gt_y = np.load(opt.dataone)
+                
+                # im_gt_y = np.load(opt.dataset + "/" + image_name)
+                
                 # # 使用实际相机滤波阵列对原始的im_gt_y进行马赛克滤波列排列
                 im_l_y = mask_input_25(im_gt_y)
                 # 按照实际相机滤波阵列的顺序排列列逆还原为从大到小的顺序
@@ -279,7 +285,8 @@ with torch.no_grad():
                 raw = Variable(torch.from_numpy(raw).float()).view(1, -1, raw.shape[0], raw.shape[1])
                 estimated_Demosaic = np.zeros_like(im_l_y)
                 data_mat_sparse_image = {}
-                for index in range(16):
+                # ToDo 确认波段
+                for index in range((opt.scale) ** 2):
                     # 从im_l_y中选择特定通道的子图像
                     sparse_image = im_l_y[index, :, :]
                     data_mat_sparse_image[index] = sparse_image
@@ -389,7 +396,7 @@ with torch.no_grad():
                 # cv2.imwrite(PPI_real_path, target_PPI[0,:,:])
                 
                 # 循环保存估计的Demosaic通道和真实的Demosaic通道作为图像文件
-                for channel in range(16):
+                for channel in range((opt.scale) ** 2):
                     demosaic_path = os.path.join(kind_dir + '/estimated_channel_'+str(channel)+'.png')
                     cv2.imwrite(demosaic_path, estimated_Demosaic[channel, :, :])
 

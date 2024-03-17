@@ -118,6 +118,8 @@ CUDA_VISIBLE_DEVICES=0 python train_PPI.py --train_dir /home/dell/wyz/workGJS/da
 ```
 CUDA_VISIBLE_DEVICES=1 nohup python train_demosaic.py --train_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Train --val_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Test --batchSize 32 --msfa_size 5 --PPI_pretrained /home/dell/wyz/workGJS/DDM-Net/checkpoint/PPI_Model/GJS_25_PPI_model_epoch_200.pth > /home/dell/wyz/workGJS/DDM-Net/log/GJS_25/TrainModellog.txt 2>&1 &
 
+tail -f /home/dell/wyz/workGJS/DDM-Net/log/GJS_25/TrainModellog.txt
+
 ```
 
 ## Fine Tuning
@@ -125,3 +127,36 @@ CUDA_VISIBLE_DEVICES=1 nohup python train_demosaic.py --train_dir /home/dell/wyz
 CUDA_VISIBLE_DEVICES=0 nohup python train_fine_tuning.py --train_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Train --val_dir /home/dell/wyz/workGJS/dataset/TT31npy/TT31Test --batchSize 4 --resume /home/dell/wyz/workGJS/DDM-Net/checkpoint/PPI_Model/TT31_25_PPI_model_epoch_1000.pth --start-epoch 3001 > /home/dell/wyz/workGJS/DDM-Net/log/TT31/FineTrainModellog.txt 2>&1 &
 ```
 
+# GJS_My_25_Resize
+
+## PPI
+```
+CUDA_VISIBLE_DEVICES=0 nohup python train_PPI.py --train_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResize --val_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResizeTest --batchSize 32 --msfa_size 5 --resume False > /home/dell/wyz/workGJS/DDM-Net/log/GJS_25_Resize/TrainPPIlog.txt 2>&1 &
+
+tail -f /home/dell/wyz/workGJS/DDM-Net/log/GJS_25_Resize/TrainPPIlog.txt
+
+CUDA_VISIBLE_DEVICES=0 python train_PPI.py --train_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Train --val_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Test --batchSize 4 --msfa_size 5 --resume False
+
+```
+
+## Model
+```
+CUDA_VISIBLE_DEVICES=1 nohup python train_demosaic.py --train_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResize --val_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResizeTest --batchSize 32 --msfa_size 5 --PPI_pretrained /home/dell/wyz/workGJS/DDM-Net/checkpoint/pre-training/PPI_model_epoch_400.pth > /home/dell/wyz/workGJS/DDM-Net/log/GJS_25_Resize/TrainModellog.txt 2>&1 &
+
+tail -f /home/dell/wyz/workGJS/DDM-Net/log/GJS_25_Resize/TrainModellog.txt
+
+```
+
+## Fine Tuning
+```
+CUDA_VISIBLE_DEVICES=2 nohup python train_fine_tuning.py --train_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResize --val_dir /home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResizeTest --batchSize 32 --msfa_size 5 --resume /home/dell/wyz/workGJS/DDM-Net/checkpoint/main/main_model_epoch_600.pth --start_epoch 500 > /home/dell/wyz/workGJS/DDM-Net/log/GJS_25_Resize/FineTrainModellog.txt 2>&1 &
+
+tail -f /home/dell/wyz/workGJS/DDM-Net/log/GJS_25_Resize/FineTrainModellog.txt
+```
+
+
+1. 把每个波段拿出来，变成1/25的大小
+2. 把每个单波段的拿出来，resize为25倍
+3. 计算psnr和loss
+  (1) target为25个，每个波段计算psnr，求平均得loss
+  (2) target为每个波段的平均值，再求一次psnr，求一次loss

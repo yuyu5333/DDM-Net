@@ -1,2 +1,2 @@
 Epoch,batchSize,nEpochs,lr,step,cuda,resume,start_epoch,threads,momentum,weight_decay,pretrained,msfa_size,train_dir,val_dir,seed,norm_flag,augment_flag
-1,32,3000,0.0005,500,True,False,1,0,0.9,0.0001,,5,/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Train,/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/Test,6213,False,False
+1,32,3000,0.0005,500,True,False,1,0,0.9,0.0001,,5,/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResize,/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResizeTest,9533,False,False
