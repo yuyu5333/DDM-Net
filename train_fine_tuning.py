@@ -258,7 +258,7 @@ def test(testing_data_loader, optimizer,model, epoch, num_epochs):
 
 
 def save_checkpoint(model, epoch):
-    model_folder = "checkpoint/fine-tuning/GJS_25"
+    model_folder = "checkpoint/fine-tuning/GJS_25/"
     model_out_path = model_folder + "final_model_epoch_{}.pth".format(epoch)
     state = {"epoch": epoch ,"model": model}
     if not os.path.exists(model_folder):
@@ -268,7 +268,7 @@ def save_checkpoint(model, epoch):
     print("Checkpoint saved to {}".format(model_out_path))
 
 def save_opt(opt):
-    statistics_folder = "checkpoint/fine-tuning/GJS_25"
+    statistics_folder = "checkpoint/fine-tuning/GJS_25/"
     if not os.path.exists(statistics_folder):
         os.makedirs(statistics_folder)
     data_frame = pd.DataFrame(
@@ -277,7 +277,7 @@ def save_opt(opt):
     print("save--opt")
 
 def save_statistics(opt, results, epoch):
-    statistics_folder = "checkpoint/fine-tuning/GJS_25"
+    statistics_folder = "checkpoint/fine-tuning/GJS_25/"
     if not os.path.exists(statistics_folder):
         os.makedirs(statistics_folder)
     data_frame = pd.DataFrame(

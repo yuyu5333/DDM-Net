@@ -155,9 +155,9 @@ def compute_sam(x_true, x_pre):
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 parser = argparse.ArgumentParser(description="PyTorch LapSRN Eval")
 parser.add_argument("--cuda", action="store_true", help="use cuda?")
-parser.add_argument("--model", default="/home/dell/wyz/workGJS/DDM-Net/checkpoint/model_in_paper.pth", type=str, help="model path")
+parser.add_argument("--model", default="/home/dell/wyz/workGJS/DDM-Net/checkpoint/Fine_Tuning_Train_Model/CAVE_final_model_epoch_4000.pth", type=str, help="model path")
 #parser.add_argument("--model", default="checkpoint/fine-tuning/final_model_epoch_4000.pth", type=str, help="model path")
-parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/RealIMG_GJS/test", type=str, help="dataset name, Default: CAVE")
+parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/CAVEnpy/CAVETest", type=str, help="dataset name, Default: CAVE")
 parser.add_argument("--scale", default=4, type=int, help="msfa_size, Default: 4")
 
 opt = parser.parse_args()
@@ -310,7 +310,7 @@ with torch.no_grad():
                 
                 # 创建目录名和文件名，将结果保存为图像文件
                 kind = image_name[:-4]
-                kind_dir = os.path.join('test_demosaic_result/RealIMG_GJS/' + kind + '/')
+                kind_dir = os.path.join('test_demosaic_result/CAVE_Fine_4000/' + kind + '/')
                 os.makedirs(kind_dir, exist_ok=True)
                 PPI_path = os.path.join(kind_dir + '/estimated_PPI.png')
                 cv2.imwrite(PPI_path,estimated_PPI[0,:,:])

@@ -1,2 +1,2 @@
 Epoch,batchSize,nEpochs,lr,step,cuda,resume,start_epoch,threads,momentum,weight_decay,pretrained,PPI_pretrained,msfa_size,train_dir,val_dir,seed,norm_flag,augment_flag
-1,32,2000,0.0005,500,True,,1,0,0.9,0.0001,,/home/dell/wyz/workGJS/DDM-Net/checkpoint/pre-training/PPI_model_epoch_400.pth,5,/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResize,/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResizeTest,9483,False,False
+1,32,2000,0.0005,500,True,,1,0,0.9,0.0001,,/home/dell/wyz/workGJS/DDM-Net/checkpoint/PPI_Model/GJS_25_PPI_model_epoch_3000.pth,5,/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResize,/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResizeTest,1931,False,False

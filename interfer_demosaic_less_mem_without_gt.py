@@ -201,17 +201,17 @@ def compute_sam(x_true, x_pre):
 os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 parser = argparse.ArgumentParser(description="PyTorch LapSRN Eval")
 parser.add_argument("--cuda", action="store_true", help="use cuda?")
-parser.add_argument("--model", default="/home/dell/wyz/workGJS/DDM-Net/checkpoint/main/main_model_epoch_500.pth", type=str, help="model path")
+parser.add_argument("--model", default="/home/dell/wyz/workGJS/DDM-Net/checkpoint/Model_Train/GJS_25_main_model_epoch_2000.pth", type=str, help="model path")
 #parser.add_argument("--model", default="checkpoint/fine-tuning/final_model_epoch_4000.pth", type=str, help="model path")
 # parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/RealIMG_GJS/test_repeat16", type=str, help="dataset name, Default: CAVE")
 parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/interfer1time", type=str, help="dataset name, Default: CAVE")
-# parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/RealIMG_GJS/scenery_npy_25_dim25", type=str, help="dataset name, Default: CAVE")
+# parser.add_argument("--dataset", default="/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyResizeTest", type=str, help="dataset name, Default: CAVE")
 
-parser.add_argument("--dataone", default="/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/TrainALL/shop1.npy", type=str, help="dataset name, Default: CAVE")
+parser.add_argument("--dataone", default="/home/dell/wyz/workGJS/dataset/MascDataSetMyMade/DataNpyBand/shop1.npy", type=str, help="dataset name, Default: CAVE")
 parser.add_argument("--scale", default=5, type=int, help="msfa_size, Default: 4")
 
-# parser.add_argument("--result_dir", default="RealIMG_GJS/scenery/")
 parser.add_argument("--result_dir", default="Temp/")
+# parser.add_argument("--result_dir", default="RealIMG_GJS/MyMade/")
 
 opt = parser.parse_args()
 cuda = True
@@ -262,10 +262,13 @@ with torch.no_grad():
                 # 使用实际相机滤波阵列对原始的input_raw_16进行马赛克滤波列排列
                 # im_l_y = mask_input(input_raw_16)
                 
-                im_gt_y = np.load(opt.dataone)
+                is_dataset = 0
                 
-                # im_gt_y = np.load(opt.dataset + "/" + image_name)
-                
+                if is_dataset:
+                    im_gt_y = np.load(opt.dataset + "/" + image_name)
+                else:
+                    im_gt_y = np.load(opt.dataone)
+
                 # # 使用实际相机滤波阵列对原始的im_gt_y进行马赛克滤波列排列
                 im_l_y = mask_input_25(im_gt_y)
                 # 按照实际相机滤波阵列的顺序排列列逆还原为从大到小的顺序

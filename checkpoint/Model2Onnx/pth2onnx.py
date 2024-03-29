@@ -63,6 +63,46 @@ def mask_input(GT_image):
     # 返回经过马赛克滤波处理后的图像
     return input_image
 
+def mask_input_25(GT_image):
+    # 创建一个全零矩阵，与输入图像大小相同，用于存储马赛克滤波后的图像
+    mask = np.zeros((GT_image.shape[0], GT_image.shape[1], 25), dtype=np.float32)
+    
+    # 根据特定的滤波模式，将某些位置设置为1，形成25个子图像块
+    mask[0::5, 0::5, 0] = 1
+    mask[0::5, 1::5, 1] = 1
+    mask[0::5, 2::5, 2] = 1
+    mask[0::5, 3::5, 3] = 1
+    mask[0::5, 4::5, 4] = 1
+    
+    mask[1::5, 0::5, 5] = 1
+    mask[1::5, 1::5, 6] = 1
+    mask[1::5, 2::5, 7] = 1
+    mask[1::5, 3::5, 8] = 1
+    mask[1::5, 4::5, 9] = 1
+    
+    mask[2::5, 0::5, 10] = 1
+    mask[2::5, 1::5, 11] = 1
+    mask[2::5, 2::5, 12] = 1
+    mask[2::5, 3::5, 13] = 1
+    mask[2::5, 4::5, 14] = 1
+    
+    mask[3::5, 0::5, 15] = 1
+    mask[3::5, 1::5, 16] = 1
+    mask[3::5, 2::5, 17] = 1
+    mask[3::5, 3::5, 18] = 1
+    mask[3::5, 4::5, 19] = 1
+    
+    mask[4::5, 0::5, 20] = 1
+    mask[4::5, 1::5, 21] = 1
+    mask[4::5, 2::5, 22] = 1
+    mask[4::5, 3::5, 23] = 1
+    mask[4::5, 4::5, 24] = 1
+    
+    # 将输入图像与马赛克滤波后的图像进行元素级乘法
+    input_image = mask * GT_image
+    
+    # 返回经过马赛克滤波处理后的图像
+    return input_image
 
 def compute_PSNR(estimated,real):
     estimated = np.float64(estimated)
